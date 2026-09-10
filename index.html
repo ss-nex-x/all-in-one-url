@@ -1,0 +1,849 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Cloudflare Projects Hub</title>
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Font Awesome Icons CDN -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            brand: {
+              50: '#f0f9ff',
+              100: '#e0f2fe',
+              500: '#0284c7',
+              600: '#0369a1',
+              700: '#075985',
+              900: '#0c4a6e',
+            }
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    /* Custom scrollbars and transitions */
+    ::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+    ::-webkit-scrollbar-track {
+      background: #0f172a;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: #334155;
+      border-radius: 4px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: #475569;
+    }
+    .glass-card {
+      background: rgba(30, 41, 59, 0.7);
+      backdrop-filter: blur(12px);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+    }
+    .glass-card:hover {
+      border-color: rgba(56, 189, 248, 0.4);
+    }
+  </style>
+</head>
+<body class="bg-slate-950 text-slate-100 min-h-screen font-sans antialiased selection:bg-sky-500 selection:text-white flex flex-col">
+
+  <!-- Top Navigation Bar -->
+  <header class="sticky top-0 z-40 bg-slate-900/90 backdrop-blur-md border-b border-slate-800">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between gap-4">
+      <div class="flex items-center gap-3">
+        <div class="h-10 w-10 rounded-xl bg-gradient-to-tr from-sky-500 to-indigo-600 flex items-center justify-center text-white shadow-lg shadow-sky-500/20">
+          <i class="fa-solid fa-layer-group text-lg"></i>
+        </div>
+        <div>
+          <div class="flex items-center gap-2">
+            <h1 class="font-bold text-lg text-white tracking-tight">Project Portal</h1>
+            <span class="px-2 py-0.5 rounded-full text-xs font-semibold bg-sky-500/10 text-sky-400 border border-sky-500/20">45 Live</span>
+          </div>
+          <p class="text-xs text-slate-400 hidden sm:block">Unified dashboard for all Cloudflare Pages</p>
+        </div>
+      </div>
+
+      <!-- Quick Actions -->
+      <div class="flex items-center gap-2 sm:gap-3">
+        <button id="splitViewToggleBtn" class="px-3 py-1.5 rounded-lg border border-slate-700 bg-slate-800/80 hover:bg-slate-700 text-xs font-medium text-slate-300 transition-all flex items-center gap-2">
+          <i class="fa-solid fa-columns"></i>
+          <span class="hidden md:inline">Split Workspace</span>
+        </button>
+        <button id="exportLinksBtn" class="px-3 py-1.5 rounded-lg border border-slate-700 bg-slate-800/80 hover:bg-slate-700 text-xs font-medium text-slate-300 transition-all flex items-center gap-2" title="Export all URLs list">
+          <i class="fa-solid fa-file-export"></i>
+          <span class="hidden md:inline">Export List</span>
+        </button>
+        <button id="randomOpenBtn" class="px-3 py-1.5 rounded-lg bg-sky-600 hover:bg-sky-500 text-white text-xs font-semibold shadow-md shadow-sky-600/30 transition-all flex items-center gap-2">
+          <i class="fa-solid fa-shuffle"></i>
+          <span class="hidden sm:inline">Random Launch</span>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main Controls & Filtering Section -->
+  <div class="border-b border-slate-800/80 bg-slate-900/40 py-5">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-4">
+      
+      <!-- Search & Layout View Toolbar -->
+      <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 justify-between">
+        <div class="relative flex-1 max-w-xl">
+          <i class="fa-solid fa-magnifying-glass absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 text-sm"></i>
+          <input 
+            type="text" 
+            id="searchInput"
+            placeholder="Search 45 projects by name, URL, or keyword..." 
+            class="w-full pl-10 pr-10 py-2.5 bg-slate-900 border border-slate-700/80 rounded-xl text-sm text-slate-200 placeholder-slate-400 focus:outline-none focus:border-sky-500 focus:ring-1 focus:ring-sky-500 transition-colors"
+          >
+          <button id="clearSearchBtn" class="hidden absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-white text-xs">
+            <i class="fa-solid fa-xmark"></i>
+          </button>
+        </div>
+
+        <div class="flex items-center gap-2 self-end sm:self-auto">
+          <!-- View switch buttons -->
+          <div class="bg-slate-900 p-1 rounded-xl border border-slate-800 flex items-center gap-1">
+            <button id="viewGridBtn" class="p-2 rounded-lg text-xs font-medium text-sky-400 bg-slate-800 transition" title="Grid View">
+              <i class="fa-solid fa-grip"></i>
+            </button>
+            <button id="viewListBtn" class="p-2 rounded-lg text-xs font-medium text-slate-400 hover:text-white transition" title="List View">
+              <i class="fa-solid fa-list"></i>
+            </button>
+          </div>
+
+          <!-- Sort dropdown -->
+          <select id="sortSelect" class="bg-slate-900 text-xs text-slate-300 border border-slate-800 rounded-xl px-3 py-2.5 focus:outline-none focus:border-sky-500">
+            <option value="id-asc">Index: 1 to 45</option>
+            <option value="id-desc">Index: 45 to 1</option>
+            <option value="name-asc">Name: A to Z</option>
+            <option value="name-desc">Name: Z to A</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- Category Filter Pills -->
+      <div class="flex items-center gap-2 overflow-x-auto pb-1 scrollbar-none text-xs" id="categoryContainer">
+        <!-- Dynamically generated or static pills -->
+      </div>
+    </div>
+  </div>
+
+  <!-- Main Content Area -->
+  <main class="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6">
+    
+    <!-- Toast Message Container -->
+    <div id="toastNotification" class="fixed bottom-6 right-6 z-50 bg-slate-800 text-sky-400 border border-sky-500/30 px-4 py-3 rounded-xl shadow-2xl flex items-center gap-3 transition-all duration-300 opacity-0 pointer-events-none translate-y-3">
+      <i class="fa-solid fa-circle-check text-base"></i>
+      <span id="toastMsgText" class="text-sm font-medium text-slate-200">Link copied to clipboard!</span>
+    </div>
+
+    <!-- Active Filter Counter & Quick Status -->
+    <div class="flex items-center justify-between mb-4">
+      <p class="text-xs text-slate-400">
+        Showing <span id="visibleCount" class="text-sky-400 font-bold">45</span> of <span class="font-medium text-slate-300">45</span> projects
+      </p>
+      <button id="filterFavoritesBtn" class="text-xs text-amber-400 hover:text-amber-300 flex items-center gap-1.5 transition">
+        <i class="fa-regular fa-star"></i>
+        <span>Show Bookmarked (<span id="bookmarkCount">0</span>)</span>
+      </button>
+    </div>
+
+    <!-- Main Container: Standard or Split Workspace -->
+    <div id="mainLayoutWrapper" class="transition-all">
+      <!-- Standard Cards Grid Container -->
+      <div id="projectsGrid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3 gap-4">
+        <!-- Cards injected dynamically -->
+      </div>
+
+      <!-- Standard List Container -->
+      <div id="projectsList" class="hidden flex flex-col gap-2">
+        <!-- Table/List injected dynamically -->
+      </div>
+    </div>
+
+    <!-- Split Mode Workspace (Hidden by default) -->
+    <div id="splitWorkspace" class="hidden flex flex-col lg:flex-row gap-4 h-[calc(100vh-180px)]">
+      <!-- Left sidebar items -->
+      <div class="w-full lg:w-96 flex flex-col glass-card rounded-2xl overflow-hidden border border-slate-800">
+        <div class="p-3 bg-slate-900 border-b border-slate-800 flex items-center justify-between">
+          <span class="text-xs font-semibold text-slate-300 uppercase tracking-wider">Quick Nav List</span>
+          <span class="text-xs text-slate-500" id="splitCountBadge">45 apps</span>
+        </div>
+        <div class="flex-1 overflow-y-auto p-2 space-y-1.5" id="splitSidebarList">
+          <!-- Populated dynamically -->
+        </div>
+      </div>
+
+      <!-- Right interactive browser preview -->
+      <div class="flex-1 flex flex-col glass-card rounded-2xl overflow-hidden border border-slate-800 bg-slate-900/90">
+        <div class="p-3 bg-slate-900/90 border-b border-slate-800 flex items-center justify-between gap-3">
+          <div class="flex items-center gap-2 min-w-0 flex-1">
+            <span class="inline-block w-3 h-3 rounded-full bg-rose-500"></span>
+            <span class="inline-block w-3 h-3 rounded-full bg-amber-500"></span>
+            <span class="inline-block w-3 h-3 rounded-full bg-emerald-500"></span>
+            <div class="ml-2 bg-slate-950 px-3 py-1 rounded-md text-xs text-slate-300 font-mono truncate border border-slate-800 flex-1" id="splitUrlBar">
+              https://jpn-hardware.pages.dev
+            </div>
+          </div>
+          <div class="flex items-center gap-2">
+            <button id="splitReloadBtn" class="p-1.5 text-slate-400 hover:text-white rounded hover:bg-slate-800 text-xs" title="Reload Frame">
+              <i class="fa-solid fa-rotate-right"></i>
+            </button>
+            <a id="splitExternalBtn" href="#" target="_blank" rel="noopener noreferrer" class="px-2.5 py-1 bg-sky-600 hover:bg-sky-500 text-white rounded text-xs font-medium flex items-center gap-1.5 transition">
+              <span>Open Tab</span>
+              <i class="fa-solid fa-arrow-up-right-from-square text-[10px]"></i>
+            </a>
+          </div>
+        </div>
+        <div class="flex-1 relative bg-slate-950">
+          <iframe id="splitIframe" src="" class="w-full h-full border-none" sandbox="allow-scripts allow-same-origin allow-forms allow-popups"></iframe>
+          <div id="splitNotice" class="absolute inset-0 bg-slate-900/95 flex flex-col items-center justify-center p-6 text-center hidden">
+            <div class="w-12 h-12 rounded-2xl bg-amber-500/10 text-amber-400 flex items-center justify-center text-xl mb-3">
+              <i class="fa-solid fa-shield-halved"></i>
+            </div>
+            <h4 class="font-bold text-white text-base mb-1">Embedding Preview Note</h4>
+            <p class="text-xs text-slate-400 max-w-sm mb-4">Some sites configure frame protection (X-Frame-Options). If this live view is blocked, click "Open in New Tab" below.</p>
+            <a id="splitFallbackBtn" href="#" target="_blank" class="px-4 py-2 bg-sky-600 text-white text-xs font-semibold rounded-xl">Open External Tab</a>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </main>
+
+  <!-- Modal In-App Website Previewer -->
+  <div id="previewModal" class="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm hidden items-center justify-center p-2 sm:p-4">
+    <div class="bg-slate-900 border border-slate-700 w-full max-w-6xl h-[90vh] rounded-2xl shadow-2xl flex flex-col overflow-hidden animate-in fade-in zoom-in-95 duration-200">
+      
+      <!-- Modal Header -->
+      <div class="p-3 sm:p-4 bg-slate-800/90 border-b border-slate-700 flex items-center justify-between gap-3">
+        <div class="flex items-center gap-3 min-w-0">
+          <div class="w-8 h-8 rounded-lg bg-sky-500/20 text-sky-400 flex items-center justify-center text-sm shrink-0">
+            <i class="fa-solid fa-globe"></i>
+          </div>
+          <div class="truncate">
+            <h3 id="modalTitle" class="font-bold text-sm text-white truncate">Project Title</h3>
+            <span id="modalUrl" class="text-xs text-slate-400 font-mono">https://example.pages.dev</span>
+          </div>
+        </div>
+
+        <div class="flex items-center gap-2">
+          <!-- Device preview simulation controls -->
+          <div class="hidden sm:flex bg-slate-900 p-0.5 rounded-lg border border-slate-700 text-xs">
+            <button id="deviceDesktopBtn" class="px-2.5 py-1 rounded text-sky-400 bg-slate-800 hover:text-white" title="Desktop View">
+              <i class="fa-solid fa-desktop"></i>
+            </button>
+            <button id="deviceTabletBtn" class="px-2.5 py-1 rounded text-slate-400 hover:text-white" title="Tablet View">
+              <i class="fa-solid fa-tablet-screen-button"></i>
+            </button>
+            <button id="deviceMobileBtn" class="px-2.5 py-1 rounded text-slate-400 hover:text-white" title="Mobile View">
+              <i class="fa-solid fa-mobile-screen"></i>
+            </button>
+          </div>
+
+          <a id="modalExternalLink" href="#" target="_blank" rel="noopener noreferrer" class="px-3 py-1.5 bg-slate-700 hover:bg-slate-600 text-slate-200 text-xs font-semibold rounded-lg flex items-center gap-1.5 transition">
+            <span>Launch</span>
+            <i class="fa-solid fa-arrow-up-right-from-square text-[10px]"></i>
+          </a>
+          <button id="modalCloseBtn" class="w-8 h-8 rounded-lg bg-slate-800 hover:bg-rose-600 hover:text-white text-slate-400 flex items-center justify-center transition">
+            <i class="fa-solid fa-xmark text-sm"></i>
+          </button>
+        </div>
+      </div>
+
+      <!-- Modal Body (Iframe) -->
+      <div class="flex-1 relative bg-slate-950 flex justify-center items-center overflow-hidden">
+        <iframe id="modalIframe" src="" class="w-full h-full transition-all duration-300 border-0 bg-white" sandbox="allow-scripts allow-same-origin allow-forms allow-popups"></iframe>
+      </div>
+      
+      <!-- Modal Footer -->
+      <div class="p-2.5 bg-slate-900 border-t border-slate-800 flex items-center justify-between text-xs text-slate-400 px-4">
+        <span>If content doesn't display due to Cloudflare frame restrictions, click <strong>Launch</strong> to open directly.</span>
+        <button id="modalCopyBtn" class="hover:text-sky-400 transition flex items-center gap-1">
+          <i class="fa-regular fa-copy"></i>
+          <span>Copy URL</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Full parsed dataset containing all 45 projects with categorization & display names
+    const rawProjects = [
+      { id: 1, name: "jpn-hardware", url: "https://jpn-hardware.pages.dev", category: "Retail & Commerce" },
+      { id: 2, name: "nexx", url: "https://nexx-66z.pages.dev", category: "Corporate & Agency" },
+      { id: 3, name: "electric-shop-management-system", url: "https://electric-shop-management-system-1yu.pages.dev", category: "ERP & Management" },
+      { id: 4, name: "nex-x-hr-management", url: "https://nex-x-hr-management.pages.dev", category: "HR & Operations" },
+      { id: 5, name: "vino-tasty-hub-landing-page", url: "https://vino-tasty-hub-landing-page.pages.dev", category: "Food & Restaurant" },
+      { id: 6, name: "nexenv-vault", url: "https://nexenv-vault.pages.dev", category: "Tech & Utilities" },
+      { id: 7, name: "malar-maths", url: "https://malar-maths.pages.dev", category: "Education & Learning" },
+      { id: 8, name: "brick-flow-erp", url: "https://brick-flow-erp.pages.dev", category: "ERP & Management" },
+      { id: 9, name: "toy-store", url: "https://toy-store-c59.pages.dev", category: "Retail & Commerce" },
+      { id: 10, name: "kalyanamandapam-management", url: "https://kalyanamandapam-management.pages.dev", category: "Events & Booking" },
+      { id: 11, name: "hotel-sri-pandian", url: "https://hotel-sri-pandian.pages.dev", category: "Food & Restaurant" },
+      { id: 12, name: "vinotastyhub", url: "https://vinotastyhub.pages.dev", category: "Food & Restaurant" },
+      { id: 13, name: "ap-gym", url: "https://ap-gym.pages.dev", category: "Fitness & Health" },
+      { id: 14, name: "toy-store-sample", url: "https://toy-store-sample.pages.dev", category: "Retail & Commerce" },
+      { id: 15, name: "staff-attendance-management-system", url: "https://staff-attendance-management-system-f2o.pages.dev", category: "HR & Operations" },
+      { id: 16, name: "nexx-project-management", url: "https://nexx-project-management.pages.dev", category: "ERP & Management" },
+      { id: 17, name: "crm", url: "https://crm-ch2.pages.dev", category: "CRM & Finance" },
+      { id: 18, name: "google-map-data-scraper", url: "https://google-map-data-scraper.pages.dev", category: "Tech & Utilities" },
+      { id: 19, name: "nex-x-portfolio", url: "https://nex-x-portfolio.pages.dev", category: "Portfolio & Agency" },
+      { id: 20, name: "watch", url: "https://watch-8px.pages.dev", category: "Retail & Commerce" },
+      { id: 21, name: "chill-bro-menu", url: "https://chill-bro-menu.pages.dev", category: "Food & Restaurant" },
+      { id: 22, name: "car-rental-demo", url: "https://car-rental-demo-5lv.pages.dev", category: "Automotive & Travel" },
+      { id: 23, name: "xpress-car", url: "https://xpress-car.pages.dev", category: "Automotive & Travel" },
+      { id: 24, name: "garden-website-demo-v1", url: "https://garden-website-demo-v1.pages.dev", category: "Corporate & Agency" },
+      { id: 25, name: "vinotastyhubfinallandingpage", url: "https://vinotastyhubfinallandingpage.pages.dev", category: "Food & Restaurant" },
+      { id: 26, name: "ideal-construction", url: "https://ideal-construction.pages.dev", category: "ERP & Management" },
+      { id: 27, name: "gym-management-sys", url: "https://gym-management-sys.pages.dev", category: "Fitness & Health" },
+      { id: 28, name: "kuwait-hub", url: "https://kuwait-hub.pages.dev", category: "Corporate & Agency" },
+      { id: 29, name: "boutique-website", url: "https://boutique-website-exq.pages.dev", category: "Retail & Commerce" },
+      { id: 30, name: "sop", url: "https://sop-bof.pages.dev", category: "Tech & Utilities" },
+      { id: 31, name: "cafe-land-pos", url: "https://cafe-land-pos.pages.dev", category: "Food & Restaurant" },
+      { id: 32, name: "demo-crm", url: "https://demo-crm-cj9.pages.dev", category: "CRM & Finance" },
+      { id: 33, name: "bim-cadd-academy", url: "https://bim-cadd-academy.pages.dev", category: "Education & Learning" },
+      { id: 34, name: "certify", url: "https://certify-4vg.pages.dev", category: "Tech & Utilities" },
+      { id: 35, name: "construction-erp", url: "https://construction-erp-62v.pages.dev", category: "ERP & Management" },
+      { id: 36, name: "crm-finance", url: "https://crm-finance-485.pages.dev", category: "CRM & Finance" },
+      { id: 37, name: "2ndcar", url: "https://2ndcar.pages.dev", category: "Automotive & Travel" },
+      { id: 38, name: "nexx-dine-restaurant", url: "https://nexx-dine-restaurant.pages.dev", category: "Food & Restaurant" },
+      { id: 39, name: "nex-x-picselect", url: "https://nex-x-picselect.pages.dev", category: "Creative & Media" },
+      { id: 40, name: "cuddlesncaptures-photo-studio-management-system", url: "https://cuddlesncaptures-photo-studio-management-system.pages.dev", category: "Creative & Media" },
+      { id: 41, name: "google-sheet-ecom", url: "https://google-sheet-ecom.pages.dev", category: "Retail & Commerce" },
+      { id: 42, name: "clinet-d-c-cake-ngl", url: "https://clinet-d-c-cake-ngl.pages.dev", category: "Food & Restaurant" },
+      { id: 43, name: "printing-website", url: "https://printing-website-ec0.pages.dev", category: "Retail & Commerce" },
+      { id: 44, name: "dentile-clinic-web1", url: "https://dentile-clinic-web1.pages.dev", category: "Fitness & Health" },
+      { id: 45, name: "nex-x-website", url: "https://nex-x-website.pages.dev", category: "Portfolio & Agency" }
+    ];
+
+    // Format human-friendly titles
+    function formatTitle(slug) {
+      return slug
+        .split('-')
+        .map(word => {
+          if (word.toLowerCase() === 'erp') return 'ERP';
+          if (word.toLowerCase() === 'crm') return 'CRM';
+          if (word.toLowerCase() === 'hr') return 'HR';
+          if (word.toLowerCase() === 'pos') return 'POS';
+          if (word.toLowerCase() === 'sop') return 'SOP';
+          if (word.toLowerCase() === 'cadd') return 'CADD';
+          if (word.toLowerCase() === 'bim') return 'BIM';
+          return word.charAt(0).toUpperCase() + word.slice(1);
+        })
+        .join(' ');
+    }
+
+    // Category badge color mapper
+    function getCategoryColor(cat) {
+      switch(cat) {
+        case 'Food & Restaurant': return 'text-amber-400 bg-amber-500/10 border-amber-500/20';
+        case 'ERP & Management': return 'text-emerald-400 bg-emerald-500/10 border-emerald-500/20';
+        case 'CRM & Finance': return 'text-violet-400 bg-violet-500/10 border-violet-500/20';
+        case 'Retail & Commerce': return 'text-pink-400 bg-pink-500/10 border-pink-500/20';
+        case 'Automotive & Travel': return 'text-orange-400 bg-orange-500/10 border-orange-500/20';
+        case 'Fitness & Health': return 'text-cyan-400 bg-cyan-500/10 border-cyan-500/20';
+        case 'HR & Operations': return 'text-teal-400 bg-teal-500/10 border-teal-500/20';
+        case 'Creative & Media': return 'text-purple-400 bg-purple-500/10 border-purple-500/20';
+        case 'Education & Learning': return 'text-yellow-400 bg-yellow-500/10 border-yellow-500/20';
+        default: return 'text-sky-400 bg-sky-500/10 border-sky-500/20';
+      }
+    }
+
+    // State management
+    let state = {
+      searchQuery: '',
+      activeCategory: 'All',
+      sortKey: 'id-asc',
+      onlyFavorites: false,
+      bookmarks: JSON.parse(localStorage.getItem('cf_portal_bookmarks') || '[]'),
+      viewMode: 'grid', // 'grid' | 'list'
+      splitMode: false,
+      activeSplitId: 1
+    };
+
+    // Category options list
+    const categories = ['All', ...new Set(rawProjects.map(p => p.category))];
+
+    // Safe clipboard copier function
+    function copyToClipboard(text, customMessage = 'URL copied to clipboard!') {
+      const tempInput = document.createElement('input');
+      tempInput.value = text;
+      document.body.appendChild(tempInput);
+      tempInput.select();
+      try {
+        document.execCommand('copy');
+        showToast(customMessage);
+      } catch (err) {
+        showToast('Failed to copy');
+      }
+      document.body.removeChild(tempInput);
+    }
+
+    // Toast notification display
+    let toastTimeout;
+    function showToast(msg) {
+      const toast = document.getElementById('toastNotification');
+      const toastText = document.getElementById('toastMsgText');
+      toastText.textContent = msg;
+      toast.classList.remove('opacity-0', 'pointer-events-none', 'translate-y-3');
+      clearTimeout(toastTimeout);
+      toastTimeout = setTimeout(() => {
+        toast.classList.add('opacity-0', 'pointer-events-none', 'translate-y-3');
+      }, 2500);
+    }
+
+    // Toggle bookmark
+    function toggleBookmark(id) {
+      if (state.bookmarks.includes(id)) {
+        state.bookmarks = state.bookmarks.filter(bId => bId !== id);
+        showToast('Removed from bookmarks');
+      } else {
+        state.bookmarks.push(id);
+        showToast('Added to bookmarks');
+      }
+      localStorage.setItem('cf_portal_bookmarks', JSON.stringify(state.bookmarks));
+      updateBookmarkCount();
+      renderApp();
+    }
+
+    function updateBookmarkCount() {
+      document.getElementById('bookmarkCount').textContent = state.bookmarks.length;
+    }
+
+    // Filter & Sort Projects
+    function getFilteredProjects() {
+      return rawProjects.filter(p => {
+        const matchesSearch = 
+          p.name.toLowerCase().includes(state.searchQuery.toLowerCase()) ||
+          p.url.toLowerCase().includes(state.searchQuery.toLowerCase()) ||
+          p.category.toLowerCase().includes(state.searchQuery.toLowerCase()) ||
+          p.id.toString() === state.searchQuery.trim();
+
+        const matchesCat = state.activeCategory === 'All' || p.category === state.activeCategory;
+        const matchesFav = !state.onlyFavorites || state.bookmarks.includes(p.id);
+
+        return matchesSearch && matchesCat && matchesFav;
+      }).sort((a, b) => {
+        if (state.sortKey === 'id-asc') return a.id - b.id;
+        if (state.sortKey === 'id-desc') return b.id - a.id;
+        if (state.sortKey === 'name-asc') return a.name.localeCompare(b.name);
+        if (state.sortKey === 'name-desc') return b.name.localeCompare(a.name);
+        return 0;
+      });
+    }
+
+    // Render Category Pills
+    function renderCategories() {
+      const container = document.getElementById('categoryContainer');
+      container.innerHTML = categories.map(cat => {
+        const isActive = state.activeCategory === cat;
+        return `
+          <button 
+            onclick="setCategory('${cat}')" 
+            class="px-3.5 py-1.5 rounded-xl whitespace-nowrap transition-all font-medium border ${
+              isActive 
+                ? 'bg-sky-500 text-white border-sky-400 shadow-md shadow-sky-500/20' 
+                : 'bg-slate-900/80 text-slate-400 border-slate-800 hover:text-white hover:bg-slate-800'
+            }">
+            ${cat}
+          </button>
+        `;
+      }).join('');
+    }
+
+    function setCategory(cat) {
+      state.activeCategory = cat;
+      renderCategories();
+      renderApp();
+    }
+
+    // Render Grid Cards
+    function renderGrid(projects) {
+      const grid = document.getElementById('projectsGrid');
+      if (projects.length === 0) {
+        grid.innerHTML = `
+          <div class="col-span-full py-16 text-center text-slate-400">
+            <i class="fa-solid fa-magnifying-glass text-3xl mb-3 text-slate-600"></i>
+            <p class="text-base font-semibold text-slate-300">No matching projects found</p>
+            <p class="text-xs mt-1">Try changing your search keywords or filter category.</p>
+          </div>
+        `;
+        return;
+      }
+
+      grid.innerHTML = projects.map(p => {
+        const isFav = state.bookmarks.includes(p.id);
+        const title = formatTitle(p.name);
+        const colorClass = getCategoryColor(p.category);
+
+        return `
+          <div class="glass-card rounded-2xl p-4 sm:p-5 flex flex-col justify-between transition-all duration-200 hover:-translate-y-1 hover:shadow-xl hover:shadow-sky-950/40 group">
+            
+            <!-- Top Card Row -->
+            <div>
+              <div class="flex items-start justify-between gap-2 mb-2.5">
+                <div class="flex items-center gap-2">
+                  <span class="text-[11px] font-mono font-bold px-2 py-0.5 rounded-md bg-slate-800 text-slate-400 border border-slate-700/60">
+                    #${p.id.toString().padStart(2, '0')}
+                  </span>
+                  <span class="text-[11px] font-medium px-2 py-0.5 rounded-md border ${colorClass}">
+                    ${p.category}
+                  </span>
+                </div>
+                
+                <button 
+                  onclick="toggleBookmark(${p.id})" 
+                  class="text-sm transition-colors ${isFav ? 'text-amber-400 hover:text-amber-300' : 'text-slate-600 hover:text-amber-400'}"
+                  title="${isFav ? 'Remove bookmark' : 'Bookmark this project'}">
+                  <i class="${isFav ? 'fa-solid' : 'fa-regular'} fa-star"></i>
+                </button>
+              </div>
+
+              <!-- Title & Hostname -->
+              <h3 class="font-bold text-white text-base group-hover:text-sky-400 transition-colors line-clamp-1 mb-1">
+                ${title}
+              </h3>
+              
+              <div class="flex items-center gap-1.5 text-xs text-slate-400 font-mono mb-4 bg-slate-900/60 p-2 rounded-lg border border-slate-800/80">
+                <i class="fa-solid fa-cloud text-sky-500 text-[11px]"></i>
+                <span class="truncate flex-1">${p.url.replace('https://', '')}</span>
+                <button 
+                  onclick="copyToClipboard('${p.url}')" 
+                  class="text-slate-500 hover:text-slate-200 p-1 rounded transition" 
+                  title="Copy full URL">
+                  <i class="fa-regular fa-copy"></i>
+                </button>
+              </div>
+            </div>
+
+            <!-- Card Actions -->
+            <div class="flex items-center gap-2 pt-2 border-t border-slate-800/80 mt-2">
+              <button 
+                onclick="openModalPreview('${p.id}')" 
+                class="flex-1 py-2 px-3 bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-semibold rounded-xl flex items-center justify-center gap-1.5 transition">
+                <i class="fa-solid fa-eye text-sky-400"></i>
+                <span>Quick View</span>
+              </button>
+
+              <a 
+                href="${p.url}" 
+                target="_blank" 
+                rel="noopener noreferrer" 
+                class="flex-1 py-2 px-3 bg-sky-600 hover:bg-sky-500 text-white text-xs font-semibold rounded-xl flex items-center justify-center gap-1.5 shadow-md shadow-sky-600/20 transition">
+                <span>Launch</span>
+                <i class="fa-solid fa-arrow-up-right-from-square text-[11px]"></i>
+              </a>
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    // Render List Mode
+    function renderList(projects) {
+      const list = document.getElementById('projectsList');
+      if (projects.length === 0) {
+        list.innerHTML = `<div class="py-12 text-center text-slate-500">No projects found.</div>`;
+        return;
+      }
+
+      list.innerHTML = projects.map(p => {
+        const isFav = state.bookmarks.includes(p.id);
+        const title = formatTitle(p.name);
+        const colorClass = getCategoryColor(p.category);
+
+        return `
+          <div class="glass-card p-3 sm:px-4 rounded-xl flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 hover:border-slate-700 transition">
+            <div class="flex items-center gap-3 min-w-0 flex-1">
+              <button onclick="toggleBookmark(${p.id})" class="text-sm ${isFav ? 'text-amber-400' : 'text-slate-600 hover:text-amber-400'}">
+                <i class="${isFav ? 'fa-solid' : 'fa-regular'} fa-star"></i>
+              </button>
+              <span class="text-xs font-mono font-bold text-slate-400">#${p.id.toString().padStart(2, '0')}</span>
+              <div class="min-w-0 flex-1">
+                <div class="flex items-center gap-2">
+                  <h4 class="text-sm font-semibold text-white truncate">${title}</h4>
+                  <span class="hidden md:inline-block text-[10px] font-medium px-2 py-0.5 rounded-md border ${colorClass}">${p.category}</span>
+                </div>
+                <p class="text-xs text-slate-400 font-mono truncate">${p.url}</p>
+              </div>
+            </div>
+
+            <div class="flex items-center gap-2 self-end sm:self-auto">
+              <button onclick="copyToClipboard('${p.url}')" class="p-2 text-xs text-slate-400 hover:text-white rounded-lg bg-slate-800 hover:bg-slate-700" title="Copy URL">
+                <i class="fa-regular fa-copy"></i>
+              </button>
+              <button onclick="openModalPreview('${p.id}')" class="px-3 py-1.5 text-xs font-medium text-slate-200 bg-slate-800 hover:bg-slate-700 rounded-lg flex items-center gap-1.5">
+                <i class="fa-solid fa-eye text-sky-400"></i>
+                <span>Preview</span>
+              </button>
+              <a href="${p.url}" target="_blank" class="px-3 py-1.5 text-xs font-medium text-white bg-sky-600 hover:bg-sky-500 rounded-lg flex items-center gap-1.5">
+                <span>Launch</span>
+                <i class="fa-solid fa-arrow-up-right-from-square text-[10px]"></i>
+              </a>
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    // Render Split Sidebar items
+    function renderSplitSidebar(projects) {
+      const container = document.getElementById('splitSidebarList');
+      document.getElementById('splitCountBadge').textContent = `${projects.length} available`;
+      
+      container.innerHTML = projects.map(p => {
+        const isSelected = p.id === state.activeSplitId;
+        return `
+          <button 
+            onclick="loadSplitProject(${p.id})" 
+            class="w-full text-left p-2.5 rounded-xl text-xs transition flex items-center justify-between gap-2 ${
+              isSelected 
+                ? 'bg-sky-600/20 text-sky-300 border border-sky-500/40' 
+                : 'bg-slate-800/60 hover:bg-slate-800 text-slate-300 border border-slate-800'
+            }">
+            <div class="truncate">
+              <div class="font-semibold truncate">${p.id}. ${formatTitle(p.name)}</div>
+              <div class="text-[10px] text-slate-500 font-mono truncate">${p.url.replace('https://', '')}</div>
+            </div>
+            <i class="fa-solid fa-chevron-right text-[10px] ${isSelected ? 'text-sky-400' : 'text-slate-600'}"></i>
+          </button>
+        `;
+      }).join('');
+    }
+
+    // Load project into Split View
+    function loadSplitProject(id) {
+      state.activeSplitId = id;
+      const proj = rawProjects.find(p => p.id === id);
+      if (!proj) return;
+
+      const iframe = document.getElementById('splitIframe');
+      const urlBar = document.getElementById('splitUrlBar');
+      const extBtn = document.getElementById('splitExternalBtn');
+      const fallbackBtn = document.getElementById('splitFallbackBtn');
+
+      urlBar.textContent = proj.url;
+      extBtn.href = proj.url;
+      fallbackBtn.href = proj.url;
+      iframe.src = proj.url;
+
+      // Re-render sidebar to highlight active item
+      renderSplitSidebar(getFilteredProjects());
+    }
+
+    // Modal Preview Handler
+    let activeModalProject = null;
+    function openModalPreview(id) {
+      const proj = rawProjects.find(p => p.id === parseInt(id));
+      if (!proj) return;
+      activeModalProject = proj;
+
+      const modal = document.getElementById('previewModal');
+      const title = document.getElementById('modalTitle');
+      const url = document.getElementById('modalUrl');
+      const extLink = document.getElementById('modalExternalLink');
+      const iframe = document.getElementById('modalIframe');
+
+      title.textContent = `${proj.id}. ${formatTitle(proj.name)}`;
+      url.textContent = proj.url;
+      extLink.href = proj.url;
+      iframe.src = proj.url;
+
+      // Reset device sizing
+      setModalDevice('desktop');
+
+      modal.classList.remove('hidden');
+      modal.classList.add('flex');
+    }
+
+    function closeModal() {
+      const modal = document.getElementById('previewModal');
+      const iframe = document.getElementById('modalIframe');
+      iframe.src = 'about:blank';
+      modal.classList.add('hidden');
+      modal.classList.remove('flex');
+    }
+
+    function setModalDevice(device) {
+      const iframe = document.getElementById('modalIframe');
+      const btns = {
+        desktop: document.getElementById('deviceDesktopBtn'),
+        tablet: document.getElementById('deviceTabletBtn'),
+        mobile: document.getElementById('deviceMobileBtn')
+      };
+
+      // Reset all buttons
+      Object.values(btns).forEach(b => {
+        b.classList.remove('text-sky-400', 'bg-slate-800');
+        b.classList.add('text-slate-400');
+      });
+
+      btns[device].classList.add('text-sky-400', 'bg-slate-800');
+      btns[device].classList.remove('text-slate-400');
+
+      if (device === 'mobile') {
+        iframe.style.maxWidth = '375px';
+        iframe.style.boxShadow = '0 0 25px rgba(0,0,0,0.6)';
+        iframe.style.borderRadius = '16px';
+      } else if (device === 'tablet') {
+        iframe.style.maxWidth = '768px';
+        iframe.style.boxShadow = '0 0 25px rgba(0,0,0,0.6)';
+        iframe.style.borderRadius = '12px';
+      } else {
+        iframe.style.maxWidth = '100%';
+        iframe.style.boxShadow = 'none';
+        iframe.style.borderRadius = '0px';
+      }
+    }
+
+    // Full App Render Engine
+    function renderApp() {
+      const filtered = getFilteredProjects();
+      document.getElementById('visibleCount').textContent = filtered.length;
+
+      if (state.splitMode) {
+        renderSplitSidebar(filtered);
+      } else {
+        if (state.viewMode === 'grid') {
+          document.getElementById('projectsGrid').classList.remove('hidden');
+          document.getElementById('projectsList').classList.add('hidden');
+          renderGrid(filtered);
+        } else {
+          document.getElementById('projectsGrid').classList.add('hidden');
+          document.getElementById('projectsList').classList.remove('hidden');
+          renderList(filtered);
+        }
+      }
+    }
+
+    // Setup All Event Listeners
+    document.addEventListener('DOMContentLoaded', () => {
+      renderCategories();
+      updateBookmarkCount();
+      renderApp();
+
+      // Search input handler
+      const searchInput = document.getElementById('searchInput');
+      const clearSearchBtn = document.getElementById('clearSearchBtn');
+
+      searchInput.addEventListener('input', (e) => {
+        state.searchQuery = e.target.value;
+        clearSearchBtn.classList.toggle('hidden', !state.searchQuery);
+        renderApp();
+      });
+
+      clearSearchBtn.addEventListener('click', () => {
+        state.searchQuery = '';
+        searchInput.value = '';
+        clearSearchBtn.classList.add('hidden');
+        renderApp();
+      });
+
+      // Sort selector
+      document.getElementById('sortSelect').addEventListener('change', (e) => {
+        state.sortKey = e.target.value;
+        renderApp();
+      });
+
+      // Grid/List toggle buttons
+      const viewGridBtn = document.getElementById('viewGridBtn');
+      const viewListBtn = document.getElementById('viewListBtn');
+
+      viewGridBtn.addEventListener('click', () => {
+        state.viewMode = 'grid';
+        viewGridBtn.className = 'p-2 rounded-lg text-xs font-medium text-sky-400 bg-slate-800 transition';
+        viewListBtn.className = 'p-2 rounded-lg text-xs font-medium text-slate-400 hover:text-white transition';
+        renderApp();
+      });
+
+      viewListBtn.addEventListener('click', () => {
+        state.viewMode = 'list';
+        viewListBtn.className = 'p-2 rounded-lg text-xs font-medium text-sky-400 bg-slate-800 transition';
+        viewGridBtn.className = 'p-2 rounded-lg text-xs font-medium text-slate-400 hover:text-white transition';
+        renderApp();
+      });
+
+      // Split Workspace view toggle
+      const splitBtn = document.getElementById('splitViewToggleBtn');
+      const mainWrapper = document.getElementById('mainLayoutWrapper');
+      const splitWorkspace = document.getElementById('splitWorkspace');
+
+      splitBtn.addEventListener('click', () => {
+        state.splitMode = !state.splitMode;
+        if (state.splitMode) {
+          mainWrapper.classList.add('hidden');
+          splitWorkspace.classList.remove('hidden');
+          splitBtn.classList.add('bg-sky-600', 'text-white', 'border-sky-500');
+          splitBtn.classList.remove('bg-slate-800/80', 'text-slate-300');
+          loadSplitProject(state.activeSplitId);
+        } else {
+          mainWrapper.classList.remove('hidden');
+          splitWorkspace.classList.add('hidden');
+          splitBtn.classList.remove('bg-sky-600', 'text-white', 'border-sky-500');
+          splitBtn.classList.add('bg-slate-800/80', 'text-slate-300');
+        }
+        renderApp();
+      });
+
+      // Split reload button
+      document.getElementById('splitReloadBtn').addEventListener('click', () => {
+        const iframe = document.getElementById('splitIframe');
+        iframe.src = iframe.src;
+      });
+
+      // Random launch button
+      document.getElementById('randomOpenBtn').addEventListener('click', () => {
+        const randomItem = rawProjects[Math.floor(Math.random() * rawProjects.length)];
+        window.open(randomItem.url, '_blank');
+        showToast(`Launched #${randomItem.id} ${formatTitle(randomItem.name)}`);
+      });
+
+      // Filter Favorites Toggle
+      const favBtn = document.getElementById('filterFavoritesBtn');
+      favBtn.addEventListener('click', () => {
+        state.onlyFavorites = !state.onlyFavorites;
+        favBtn.innerHTML = state.onlyFavorites
+          ? `<i class="fa-solid fa-star text-amber-400"></i><span class="font-bold">Showing Bookmarks (${state.bookmarks.length}) - Clear</span>`
+          : `<i class="fa-regular fa-star"></i><span>Show Bookmarked (${state.bookmarks.length})</span>`;
+        renderApp();
+      });
+
+      // Export JSON / Text List of URLs
+      document.getElementById('exportLinksBtn').addEventListener('click', () => {
+        const textData = rawProjects.map(p => `${p.id}. ${formatTitle(p.name)} -> ${p.url}`).join('\n');
+        copyToClipboard(textData, 'All 45 project URLs copied to clipboard!');
+      });
+
+      // Modal device preview buttons
+      document.getElementById('deviceDesktopBtn').addEventListener('click', () => setModalDevice('desktop'));
+      document.getElementById('deviceTabletBtn').addEventListener('click', () => setModalDevice('tablet'));
+      document.getElementById('deviceMobileBtn').addEventListener('click', () => setModalDevice('mobile'));
+
+      // Modal close events
+      document.getElementById('modalCloseBtn').addEventListener('click', closeModal);
+      document.getElementById('previewModal').addEventListener('click', (e) => {
+        if (e.target.id === 'previewModal') closeModal();
+      });
+      document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape') closeModal();
+      });
+
+      // Modal copy link button
+      document.getElementById('modalCopyBtn').addEventListener('click', () => {
+        if (activeModalProject) {
+          copyToClipboard(activeModalProject.url);
+        }
+      });
+    });
+  </script>
+</body>
+</html>
